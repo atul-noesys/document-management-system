@@ -43,6 +43,8 @@ export const dictionary = {
     HR: "HR",
     Admin: "Admin",
     Operations: "Operations",
+    noDocuments: "No documents",
+    noPreview: "No preview",
   },
   ar: {
     create_new_document: "إنشاء مستند جديد",
@@ -88,6 +90,8 @@ export const dictionary = {
     HR: "الموارد البشرية",
     Admin: "الإدارة",
     Operations: "العمليات",
+    noDocuments: "لا توجد مستندات",
+    noPreview: "لا يوجد معاينة",
   },
 };
 

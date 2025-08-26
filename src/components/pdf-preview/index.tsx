@@ -1,9 +1,15 @@
+"use client";
+
+import { useTranslation } from "@/hooks/useTranslation";
+
 interface PDFPreviewProps {
   pdfUrl: string | null;
   docName: string;
 }
 
 export function PDFPreview({ pdfUrl, docName }: PDFPreviewProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="flex h-full flex-col rounded-lg shadow-sm">
       <div className="flex flex-1 items-center justify-center">
@@ -15,7 +21,7 @@ export function PDFPreview({ pdfUrl, docName }: PDFPreviewProps) {
             title={docName}
           />
         ) : (
-          <div className="text-gray-500">No Document Preview</div>
+          <div className="text-gray-500">{t("noPreview")}</div>
         )}
       </div>
     </div>

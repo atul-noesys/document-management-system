@@ -20,13 +20,13 @@ export default function Development() {
         const response = await nguageStore.GetPaginationData({
           table: "documents",
           skip: 0,
-          take: 10,
+          take: 200,
           NGaugeId: "1",
         });
 
         if (response && (response as any).data) {
           const financeData = (response as any).data.filter(
-            (item: any) => item.Department === "Development",
+            (item: any) => item.Department === "Development" && item.attachment,
           );
           setPaginationData(financeData as Document[]);
 

@@ -25,7 +25,7 @@ export default function ApproveDocument({ searchParams }: PropsType) {
       const response = await nguageStore.GetPaginationData({
         table: "documents",
         skip: 0,
-        take: 10,
+        take: 200,
         NGaugeId: "1",
       });
 

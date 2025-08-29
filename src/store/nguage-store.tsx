@@ -98,7 +98,7 @@ export class NguageStore {
         FileName: fileName,
         tenant: "docms",
       },
-    }).use(Tus, { endpoint: "https://docms.infoveave.app/ngaugeFileUpload/", chunkSize: 1024 * 1024 * 5, removeFingerprintOnSuccess: true });
+    }).use(Tus, { endpoint: "https://infoveave.app/ngaugeFileUpload/", chunkSize: 1024 * 1024 * 5, removeFingerprintOnSuccess: true });
     data.addFile({
       name: fileName,
       type: file.type,

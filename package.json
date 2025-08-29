@@ -12,6 +12,8 @@
     "deploy": "npm run pages:build && wrangler pages deploy"
   },
   "dependencies": {
+    "@uppy/core": "^5.0.1",
+    "@uppy/tus": "^5.0.0",
     "apexcharts": "^4.5.0",
     "axios": "^1.11.0",
     "class-variance-authority": "^0.7.1",

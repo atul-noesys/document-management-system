@@ -6,34 +6,20 @@ export const runtime = "edge";
 export default async function handler(request: NextRequest) {
   if (request.method === "POST") {
     try {
+      const body = await request.json();
       const authHeader = request.headers.get("Authorization");
 
-      // For edge runtime, we need to handle FormData differently
-      const formData = await request.formData();
-      const file = formData.get("file") as File;
-      const fileName = formData.get("fileName") as string;
-
-      if (!file) {
-        return new Response(JSON.stringify({ message: "No file provided" }), {
-          headers: { "content-type": "application/json" },
-          status: 400,
-        });
-      }
-
-      // Convert the file to ArrayBuffer for binary transmission
-      const fileBuffer = await file.arrayBuffer();
-
       const response = await fetch(
-        "https://docms.infoveave.app/ngaugeFileUpload/",
+        "https://docms.infoveave.app/api/v8/NGaugeForms/1/documents/Row",
         {
           method: "POST",
           headers: {
-            "Content-Type": "application/pdf",
+            "Content-Type": "application/json",
             ...(authHeader && { Authorization: authHeader }),
             "x-web-app": "Infoveave",
             "x-web-app-version": pkg.version,
           },
-          body: fileBuffer,
+          body: JSON.stringify(body),
         },
       );
 
@@ -44,7 +30,7 @@ export default async function handler(request: NextRequest) {
       const data = await response.json();
       return new Response(
         JSON.stringify({
-          message: "File uploaded successfully",
+          message: "Row Updated Successfully",
           data: data.data,
         }),
         {
@@ -64,7 +50,7 @@ export default async function handler(request: NextRequest) {
       JSON.stringify(
         {
           message: "Method not allowed",
-          details: "Please use post method for signup",
+          details: "Please use put method",
         },
         null,
       ),

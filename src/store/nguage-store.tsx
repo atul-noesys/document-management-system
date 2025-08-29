@@ -1,6 +1,8 @@
 import axios, { AxiosResponse } from "axios";
 import { makeAutoObservable } from "mobx";
 import { authConfig } from "./axios";
+import Uppy from "@uppy/core";
+import Tus from "@uppy/tus";
 
 export type PaginationData = {
   DeletedColumns: string[];
@@ -57,9 +59,10 @@ export class NguageStore {
     }
   }
 
-  async UpdateRowData(
-    editRowData: { rowData: RowData; primaryKeyData: PrimaryKeyData },
-  ): Promise<{ result: boolean; error: string }> {
+  async UpdateRowData(editRowData: {
+    rowData: RowData;
+    primaryKeyData: PrimaryKeyData;
+  }): Promise<{ result: boolean; error: string }> {
     try {
       // Get token from localStorage (client-side only)
       let token = null;
@@ -82,38 +85,53 @@ export class NguageStore {
 
   async UploadAttachFile(file: File, fileName: string) {
     try {
+    const formData = new FormData();
+    formData.append("file", file);
+    const data = new Uppy({
+      id: "upload",
+      autoProceed: true,
+      meta: {
+        ContentType: file.type,
+        Headers: {},
+        Length: file.size,
+        Name: fileName,
+        FileName: fileName,
+        tenant: "docms",
+      },
+    }).use(Tus, { endpoint: "https://docms.infoveave.app/ngaugeFileUpload/", chunkSize: 1024 * 1024 * 5, removeFingerprintOnSuccess: true });
+    data.addFile({
+      name: fileName,
+      type: file.type,
+      data: file,
+      source: "Local",
+      isRemote: false,
+    });
+    } catch (error) {
+      console.error("Upload error:", error);
+      return null;
+    }
+  }
+
+  async AddDataSourceRow(
+    rowData: RowData,
+  ): Promise<{ result: string | null; error: string }> {
+    try {
       // Get token from localStorage (client-side only)
       let token = null;
       if (typeof window !== "undefined") {
         token = localStorage.getItem("access_token");
       }
 
-      const { data }: AxiosResponse = await axios.post("/api/UploadFile", {
+      const { data }: AxiosResponse<string> =  await axios.post("/api/AddRow", rowData, {
         headers: {
           "Content-Type": "application/json",
           ...(token && { Authorization: `Bearer ${token}` }),
         },
       });
-      return data;
-    } catch {
-      return null;
+
+      return { result: data, error: "" };
+    } catch (e) {
+      return { result: null, error: (e as {data : {ref : string}}).data.ref ?? "" };
     }
   }
-
-  // async AddDataSourceRow(
-  //   ngaugeFormId: number,
-  //   table: string,
-  //   rowData: RowData,
-  // ): Promise<{ result: string | null; error: string }> {
-  //   try {
-  //     const { data }: AxiosResponse<string> = await axios.post(
-  //       `${this.authStore.BaseV8Url}/NGaugeForms/${ngaugeFormId}/${table}/Row`,
-  //       rowData,
-  //       authConfig({  })
-  //     );
-  //     return { result: data, error: "" };
-  //   } catch (e) {
-  //     return { result: null, error: (e as {data : {ref : string}}).data.ref ?? "" };
-  //   }
-  // }
 }

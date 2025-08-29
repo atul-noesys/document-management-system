@@ -48,6 +48,7 @@ export const dictionary = {
     due_date: "Due Date",
     department: "Department",
     select_department: "Select a department",
+    select_priority: "Select priority",
   },
   ar: {
     create_new_document: "إنشاء مستند جديد",
@@ -98,6 +99,7 @@ export const dictionary = {
     due_date: "تاريخ الاستحقاق",
     department: "القسم",
     select_department: "اختر قسمًا",
+    select_priority: "حدد الأولوية",
   },
 };
 

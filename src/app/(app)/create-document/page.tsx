@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslation } from "@/hooks/useTranslation";
+import { useStore } from "@/store/store-context";
 import { useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
@@ -77,6 +78,7 @@ export default function CreateDocument() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [fileName, setFileName] = useState("");
+  const { nguageStore } = useStore();
   const [formData, setFormData] = useState({
     Name: "",
     Memo: "",
@@ -99,25 +101,18 @@ export default function CreateDocument() {
   const handleFileUpload = async (file: File) => {
     setIsUploading(true);
     setUploadError("");
-    
-    // Create FormData object to send the file
-    const uploadData = new FormData();
-    uploadData.append("file", file);
-    uploadData.append("unique_id", formData.unique_id);
-    
+
     try {
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: uploadData,
-      });
-      
-      if (!response.ok) {
-        throw new Error("File upload failed");
+      const fileNameToUpload = "Ngauge" + uuidv4() + file.name;
+      const response = await nguageStore.UploadAttachFile(
+        file,
+        fileNameToUpload,
+      );
+
+      if (response) {
+        setFormData({ ...formData, attachment: file.name });
+        setFileName(fileNameToUpload);
       }
-      
-      const data = await response.json();
-      setFormData({ ...formData, attachment: data.fileUrl });
-      setFileName(file.name);
     } catch (error) {
       console.error("Upload error:", error);
       setUploadError("Failed to upload file. Please try again.");
@@ -129,13 +124,16 @@ export default function CreateDocument() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-
       console.log(file.name, file.type, file.size);
-      
       handleFileUpload(file);
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    await nguageStore.AddDataSourceRow(formData);
+    console.log("Form submitted!", formData);
+  };
 
   if (!isClient) {
     return (
@@ -175,7 +173,7 @@ export default function CreateDocument() {
           >
             {t("create_new_document")}
           </h1>
-          <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+          <form className="space-y-5" onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
                 <label
@@ -260,6 +258,10 @@ export default function CreateDocument() {
                 <select
                   id="creator"
                   name="creator"
+                  value={formData.Creater}
+                  onChange={(e) => {
+                    setFormData({ ...formData, Creater: e.target.value });
+                  }}
                   className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5"
                   style={{
                     textAlign: language === "ar" ? "right" : "left",
@@ -388,7 +390,6 @@ export default function CreateDocument() {
                   name="dueDate"
                   value={formData["Due Date"]}
                   onChange={(e) => {
-                    console.log(e.target.value);
                     setFormData({ ...formData, "Due Date": e.target.value });
                   }}
                   className="w-full rounded-lg border border-gray-300 px-4 py-2"
@@ -417,6 +418,10 @@ export default function CreateDocument() {
                   id="memo"
                   name="memo"
                   rows={2}
+                  value={formData.Memo}
+                  onChange={(e) => {
+                    setFormData({ ...formData, Memo: e.target.value });
+                  }}
                   className="w-full rounded-lg border border-gray-300 px-4 py-2.5"
                   placeholder={t("add_memo_details")}
                   style={{
@@ -435,7 +440,6 @@ export default function CreateDocument() {
                   }}
                 >
                   {t("attachment")}
-                  <span className="ml-1 font-bold text-red-500">*</span>
                 </label>
                 <div className="flex w-full items-center justify-center">
                   <label
@@ -451,7 +455,8 @@ export default function CreateDocument() {
                       </div>
                     ) : fileName ? (
                       <div className="text-sm text-gray-700">
-                        <span className="font-medium">Uploaded:</span> {fileName}
+                        <span className="font-medium">Uploaded:</span>{" "}
+                        {fileName}
                       </div>
                     ) : (
                       <div className="flex items-center justify-center gap-4">
@@ -470,6 +475,11 @@ export default function CreateDocument() {
                           ></path>
                         </svg>
                         <p className="mb-2 text-sm text-gray-500">
+                          {uploadError && (
+                            <p className="mt-1 text-sm text-red-600">
+                              {uploadError}
+                            </p>
+                          )}
                           <span className="font-semibold">
                             {t("click_to_upload")}
                           </span>{" "}
@@ -487,12 +497,8 @@ export default function CreateDocument() {
                     />
                   </label>
                 </div>
-                {uploadError && (
-                  <p className="mt-1 text-sm text-red-600">{uploadError}</p>
-                )}
               </div>
             </div>
-
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
@@ -521,31 +527,37 @@ export default function CreateDocument() {
                 />
               </div>
 
-              {/* Document Summary Field (full width) */}
+              {/* Priority Field (full width) */}
               <div>
                 <label
-                  htmlFor="name"
+                  htmlFor="priority"
                   className="mb-1 block text-sm font-medium text-gray-700"
                   style={{
                     textAlign: language === "ar" ? "right" : "left",
                     direction: language === "ar" ? "rtl" : "ltr",
                   }}
                 >
-                  {t("document_summary")}
+                  {t("approver")}
                   <span className="ml-1 font-bold text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  id="summary"
-                  name="summary"
-                  required
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5"
-                  placeholder={t("add_document_summary")}
+                <select
+                  id="priority"
+                  name="priority"
+                  value={formData.Priority}
+                  onChange={(e) => {
+                    setFormData({ ...formData, Priority: e.target.value });
+                  }}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5"
                   style={{
                     textAlign: language === "ar" ? "right" : "left",
                     direction: language === "ar" ? "rtl" : "ltr",
                   }}
-                />
+                >
+                  <option value="">{t("select_priority")}</option>
+                  <option value="High">High</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Low">Low</option>
+                </select>
               </div>
             </div>
 

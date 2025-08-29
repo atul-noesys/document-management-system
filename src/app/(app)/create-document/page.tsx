@@ -1,30 +1,147 @@
-// app/create-document/page.tsx
 "use client";
 
 import { useTranslation } from "@/hooks/useTranslation";
 import { useEffect, useState } from "react";
+import { v4 as uuidv4 } from "uuid";
 
-type PropsType = {
-  searchParams: Promise<{
-    selected_pdf?: string;
-  }>;
-};
+const developmentCreators = ["Akash", "Rakesh", "Kiran H R"];
 
-export default function CreateDocument({ searchParams }: PropsType) {
+const ItCreators = [
+  "Neha Gupta",
+  "Vikas Kapoor",
+  "Riya Das",
+  "Manish Pawar",
+  "Sonal Thakur",
+  "Harsha Gill",
+  "Kritika Bansal",
+  "Gaurav Acharya",
+  "Tanvi Shetty",
+  "Rahul Sharma",
+];
+
+const HrCreators = [
+  "Harish Verghese",
+  "Jyoti Sandhu",
+  "Nisha Trivedi",
+  "Pooja Jain",
+  "Priya Mehta",
+  "Radhika Pathak",
+  "Rohit Malhotra",
+  "Shreya Joshi",
+  "Tarun Agarwal",
+  "Varun Ghosh",
+];
+
+const AdminCreators = [
+  "Anita Dixit",
+  "Deepak Rao",
+  "Divya Menon",
+  "Ishita Pandey",
+  "Maya Arora",
+  "Nikhil Bose",
+  "Ramesh Mukherjee",
+  "Sneha Nair",
+  "Swati Naidu",
+  "Vivek Sethi",
+];
+
+const OperationsCreators = [
+  "Aakash Nanda",
+  "Aditya Khanna",
+  "Alok Bhatia",
+  "Ashish Kulkarni",
+  "Kavya Mishra",
+  "Kiran Kumar",
+  "Meera Iyer",
+  "Pallavi Gowda",
+  "Rajesh Yadav",
+  "Sanjay Reddy",
+];
+
+const FinanceCreators = [
+  "Abhishek Saxena",
+  "Amit Chopra",
+  "Anjali Singh",
+  "Arjun Verma",
+  "Chetan Rajput",
+  "Monika Banerjee",
+  "Parth Desai",
+  "Preeti Chaudhary",
+  "Sameer Kohli",
+  "Simran Patel",
+];
+
+export default function CreateDocument() {
   const { t, language } = useTranslation();
   const [isClient, setIsClient] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const [fileName, setFileName] = useState("");
+  const [formData, setFormData] = useState({
+    Name: "",
+    Memo: "",
+    "Document Type": "",
+    attachment: "",
+    Creater: "",
+    Approver: "",
+    Status: "Pending",
+    created_on: new Date().toISOString().split("T")[0],
+    "Due Date": new Date().toISOString().split("T")[0],
+    unique_id: uuidv4(),
+    Department: "",
+    Priority: "",
+  });
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  // Prevent rendering until client-side to avoid hydration mismatch
+  const handleFileUpload = async (file: File) => {
+    setIsUploading(true);
+    setUploadError("");
+    
+    // Create FormData object to send the file
+    const uploadData = new FormData();
+    uploadData.append("file", file);
+    uploadData.append("unique_id", formData.unique_id);
+    
+    try {
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: uploadData,
+      });
+      
+      if (!response.ok) {
+        throw new Error("File upload failed");
+      }
+      
+      const data = await response.json();
+      setFormData({ ...formData, attachment: data.fileUrl });
+      setFileName(file.name);
+    } catch (error) {
+      console.error("Upload error:", error);
+      setUploadError("Failed to upload file. Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+
+      console.log(file.name, file.type, file.size);
+      
+      handleFileUpload(file);
+    }
+  };
+
+
   if (!isClient) {
     return (
       <div className="flex h-[calc(100vh-105px)] flex-col gap-6 lg:flex-row">
         <div className="w-full">
           <div className="h-full overflow-y-auto rounded-xl bg-white p-6 shadow-sm">
-            {/* Skeleton loader while hydrating */}
             <div className="animate-pulse">
               <div className="mb-4 h-8 w-1/4 rounded bg-gray-200"></div>
               <div className="space-y-6">
@@ -50,7 +167,7 @@ export default function CreateDocument({ searchParams }: PropsType) {
       <div className="w-full">
         <div className="h-full overflow-y-auto rounded-xl bg-white p-6 shadow-sm">
           <h1
-            className="mb-4.5 text-2xl font-bold text-gray-800"
+            className="mb-5 text-2xl font-bold text-gray-800"
             style={{
               textAlign: language === "ar" ? "right" : "left",
               direction: language === "ar" ? "rtl" : "ltr",
@@ -58,10 +175,8 @@ export default function CreateDocument({ searchParams }: PropsType) {
           >
             {t("create_new_document")}
           </h1>
-          <form className="space-y-6">
-            {/* First row: Name and Document Type */}
+          <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              {/* Name Field */}
               <div>
                 <label
                   htmlFor="name"
@@ -72,11 +187,16 @@ export default function CreateDocument({ searchParams }: PropsType) {
                   }}
                 >
                   {t("document_name")}
+                  <span className="ml-1 font-bold text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   id="name"
                   name="name"
+                  value={formData.Name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, Name: e.target.value })
+                  }
                   required
                   className="w-full rounded-lg border border-gray-300 px-4 py-2.5"
                   placeholder={t("enter_document_name")}
@@ -86,8 +206,87 @@ export default function CreateDocument({ searchParams }: PropsType) {
                   }}
                 />
               </div>
+              {/* Department Field */}
+              <div>
+                <label
+                  htmlFor="department"
+                  className="mb-1 block text-sm font-medium text-gray-700"
+                  style={{
+                    textAlign: language === "ar" ? "right" : "left",
+                    direction: language === "ar" ? "rtl" : "ltr",
+                  }}
+                >
+                  {t("department")}
+                  <span className="ml-1 font-bold text-red-500">*</span>
+                </label>
+                <select
+                  id="department"
+                  name="department"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5"
+                  value={formData.Department}
+                  onChange={(e) =>
+                    setFormData({ ...formData, Department: e.target.value })
+                  }
+                  style={{
+                    textAlign: language === "ar" ? "right" : "left",
+                    direction: language === "ar" ? "rtl" : "ltr",
+                  }}
+                >
+                  <option value="">{t("select_department")}</option>
+                  <option value="Development">Development</option>
+                  <option value="IT">IT</option>
+                  <option value="HR">HR</option>
+                  <option value="Finance">Finance</option>
+                  <option value="Admin">Admin</option>
+                  <option value="Operations">Operations</option>
+                </select>
+              </div>
+            </div>
 
-              {/* Document Type Field */}
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              {/* Creator Field */}
+              <div>
+                <label
+                  htmlFor="creator"
+                  className="mb-1 block text-sm font-medium text-gray-700"
+                  style={{
+                    textAlign: language === "ar" ? "right" : "left",
+                    direction: language === "ar" ? "rtl" : "ltr",
+                  }}
+                >
+                  {t("creator")}
+                  <span className="ml-1 font-bold text-red-500">*</span>
+                </label>
+                <select
+                  id="creator"
+                  name="creator"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5"
+                  style={{
+                    textAlign: language === "ar" ? "right" : "left",
+                    direction: language === "ar" ? "rtl" : "ltr",
+                  }}
+                >
+                  <option value="">{t("select_creator")}</option>
+                  {(formData.Department === "Development"
+                    ? developmentCreators
+                    : formData.Department === "Finance"
+                      ? FinanceCreators
+                      : formData.Department === "IT"
+                        ? ItCreators
+                        : formData.Department === "HR"
+                          ? HrCreators
+                          : formData.Department === "Admin"
+                            ? AdminCreators
+                            : formData.Department === "Operations"
+                              ? OperationsCreators
+                              : []
+                  ).map((creator, index) => (
+                    <option key={index} value={creator}>
+                      {creator}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div>
                 <label
                   htmlFor="documentType"
@@ -98,10 +297,34 @@ export default function CreateDocument({ searchParams }: PropsType) {
                   }}
                 >
                   {t("document_type")}
+                  <span className="ml-1 font-bold text-red-500">*</span>
                 </label>
                 <select
                   id="documentType"
                   name="documentType"
+                  value={formData["Document Type"]}
+                  onChange={(e) => {
+                    if (e.target.value === "Report") {
+                      setFormData({
+                        ...formData,
+                        "Document Type": e.target.value,
+                        Approver: "Naresh Jois",
+                      });
+                    } else if (e.target.value === "Notice") {
+                      setFormData({
+                        ...formData,
+                        "Document Type": e.target.value,
+                        Approver: "Kiran H R",
+                      });
+                    } else if (e.target.value === "Letter") {
+                      setFormData({
+                        ...formData,
+                        "Document Type": e.target.value,
+                        Approver: "Smitha Boppana",
+                      });
+                    }
+                  }}
+                  required
                   className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5"
                   style={{
                     textAlign: language === "ar" ? "right" : "left",
@@ -116,36 +339,7 @@ export default function CreateDocument({ searchParams }: PropsType) {
               </div>
             </div>
 
-            {/* Second row: Creator and Approver */}
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              {/* Creator Field */}
-              <div>
-                <label
-                  htmlFor="creator"
-                  className="mb-1 block text-sm font-medium text-gray-700"
-                  style={{
-                    textAlign: language === "ar" ? "right" : "left",
-                    direction: language === "ar" ? "rtl" : "ltr",
-                  }}
-                >
-                  {t("creator")}
-                </label>
-                <select
-                  id="creator"
-                  name="creator"
-                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5"
-                  style={{
-                    textAlign: language === "ar" ? "right" : "left",
-                    direction: language === "ar" ? "rtl" : "ltr",
-                  }}
-                >
-                  <option value="">{t("select_creator")}</option>
-                  <option value="user1">User 1</option>
-                  <option value="user2">User 2</option>
-                </select>
-              </div>
-
-              {/* Approver Field */}
               <div>
                 <label
                   htmlFor="approver"
@@ -156,10 +350,12 @@ export default function CreateDocument({ searchParams }: PropsType) {
                   }}
                 >
                   {t("approver")}
+                  <span className="ml-1 font-bold text-red-500">*</span>
                 </label>
                 <select
                   id="approver"
                   name="approver"
+                  value={formData.Approver}
                   className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5"
                   style={{
                     textAlign: language === "ar" ? "right" : "left",
@@ -167,14 +363,44 @@ export default function CreateDocument({ searchParams }: PropsType) {
                   }}
                 >
                   <option value="">{t("select_approver")}</option>
-                  <option value="user1">User 1</option>
-                  <option value="user2">User 2</option>
+                  <option value="Naresh Jois">Naresh Jois</option>
+                  <option value="Smitha Boppana">Smitha Boppana</option>
+                  <option value="Kiran H R">Kiran H R</option>
                 </select>
+              </div>
+
+              {/* Approval Date Field */}
+              <div>
+                <label
+                  htmlFor="dueDate"
+                  className="mb-1 block text-sm font-medium text-gray-700"
+                  style={{
+                    textAlign: language === "ar" ? "right" : "left",
+                    direction: language === "ar" ? "rtl" : "ltr",
+                  }}
+                >
+                  {t("due_date")}
+                  <span className="ml-1 font-bold text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  id="dueDate"
+                  name="dueDate"
+                  value={formData["Due Date"]}
+                  onChange={(e) => {
+                    console.log(e.target.value);
+                    setFormData({ ...formData, "Due Date": e.target.value });
+                  }}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2"
+                  style={{
+                    textAlign: language === "ar" ? "right" : "left",
+                    direction: language === "ar" ? "rtl" : "ltr",
+                  }}
+                />
               </div>
             </div>
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              {/* Memo Field (full width) */}
               <div>
                 <label
                   htmlFor="memo"
@@ -185,11 +411,12 @@ export default function CreateDocument({ searchParams }: PropsType) {
                   }}
                 >
                   {t("memo")}
+                  <span className="ml-1 font-bold text-red-500">*</span>
                 </label>
                 <textarea
                   id="memo"
                   name="memo"
-                  rows={5}
+                  rows={2}
                   className="w-full rounded-lg border border-gray-300 px-4 py-2.5"
                   placeholder={t("add_memo_details")}
                   style={{
@@ -199,7 +426,6 @@ export default function CreateDocument({ searchParams }: PropsType) {
                 />
               </div>
 
-              {/* Attachment Field (full width) */}
               <div>
                 <label
                   className="mb-1 block text-sm font-medium text-gray-700"
@@ -209,50 +435,66 @@ export default function CreateDocument({ searchParams }: PropsType) {
                   }}
                 >
                   {t("attachment")}
+                  <span className="ml-1 font-bold text-red-500">*</span>
                 </label>
                 <div className="flex w-full items-center justify-center">
                   <label
                     htmlFor="attachment"
-                    className="flex h-[140px] w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 transition-colors hover:border-blue-500 hover:bg-blue-50"
+                    className={`flex h-[70px] w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 pt-3 transition-colors hover:border-blue-500 hover:bg-blue-50 ${isUploading ? "opacity-50" : ""}`}
                   >
-                    <div className="flex flex-col items-center justify-center pb-6 pt-5">
-                      <svg
-                        className="mb-3 h-10 w-10 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                        ></path>
-                      </svg>
-                      <p className="mb-2 text-sm text-gray-500">
-                        <span className="font-semibold">
-                          {t("click_to_upload")}
-                        </span>{" "}
-                        {t("or_drag_and_drop")}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {t("pdf_max_10mb")}
-                      </p>
-                    </div>
+                    {isUploading ? (
+                      <div className="flex items-center justify-center">
+                        <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-blue-500"></div>
+                        <span className="ml-2 text-sm text-gray-500">
+                          Uploading...
+                        </span>
+                      </div>
+                    ) : fileName ? (
+                      <div className="text-sm text-gray-700">
+                        <span className="font-medium">Uploaded:</span> {fileName}
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center gap-4">
+                        <svg
+                          className="mb-3 h-10 w-10 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                          ></path>
+                        </svg>
+                        <p className="mb-2 text-sm text-gray-500">
+                          <span className="font-semibold">
+                            {t("click_to_upload")}
+                          </span>{" "}
+                          {t("or_drag_and_drop")}
+                        </p>
+                      </div>
+                    )}
                     <input
                       id="attachment"
                       name="attachment"
                       type="file"
                       className="hidden"
+                      onChange={handleFileChange}
+                      disabled={isUploading}
                     />
                   </label>
                 </div>
+                {uploadError && (
+                  <p className="mt-1 text-sm text-red-600">{uploadError}</p>
+                )}
               </div>
             </div>
 
+
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              {/* Third row: Status (full width) */}
               <div>
                 <label
                   htmlFor="status"
@@ -263,11 +505,13 @@ export default function CreateDocument({ searchParams }: PropsType) {
                   }}
                 >
                   {t("status")}
+                  <span className="ml-1 font-bold text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   id="status"
                   name="status"
+                  value={formData.Status}
                   className="w-full rounded-lg border border-gray-300 px-4 py-2.5"
                   placeholder={t("enter_document_status")}
                   style={{
@@ -288,6 +532,7 @@ export default function CreateDocument({ searchParams }: PropsType) {
                   }}
                 >
                   {t("document_summary")}
+                  <span className="ml-1 font-bold text-red-500">*</span>
                 </label>
                 <input
                   type="text"

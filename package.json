@@ -27,7 +27,8 @@
     "react": "19.0.0",
     "react-apexcharts": "^1.7.0",
     "react-dom": "19.0.0",
-    "tailwind-merge": "^2.6.0"
+    "tailwind-merge": "^2.6.0",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@cloudflare/next-on-pages": "^1.13.14",

@@ -2,13 +2,6 @@
 import { setupDevPlatform } from '@cloudflare/next-on-pages/next-dev';
 
 const nextConfig = {
-  webpack: (config, { dev }) => {
-    if (dev) {
-      // Use a more readable source map for development
-      config.devtool = 'cheap-module-source-map';
-    }
-    return config;
-  },
   images: {
     remotePatterns: [
       {

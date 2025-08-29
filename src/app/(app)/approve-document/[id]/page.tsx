@@ -8,6 +8,8 @@ import { useStore } from "@/store/store-context";
 import { Document } from "@/components/pdf-list";
 import { useParams } from "next/navigation";
 
+export const runtime = "edge";
+
 type PropsType = {
   searchParams: Promise<{
     selected_pdf?: string;

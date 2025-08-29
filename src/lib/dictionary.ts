@@ -49,6 +49,7 @@ export const dictionary = {
     department: "Department",
     select_department: "Select a department",
     select_priority: "Select priority",
+    priority: "Priority",
   },
   ar: {
     create_new_document: "إنشاء مستند جديد",
@@ -100,6 +101,7 @@ export const dictionary = {
     department: "القسم",
     select_department: "اختر قسمًا",
     select_priority: "حدد الأولوية",
+    priority: "أولوية",
   },
 };
 

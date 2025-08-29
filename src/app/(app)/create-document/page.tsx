@@ -537,7 +537,7 @@ export default function CreateDocument() {
                     direction: language === "ar" ? "rtl" : "ltr",
                   }}
                 >
-                  {t("approver")}
+                  {t("priority")}
                   <span className="ml-1 font-bold text-red-500">*</span>
                 </label>
                 <select

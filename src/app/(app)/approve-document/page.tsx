@@ -157,7 +157,7 @@ export default function ApproveDocumentsList({ searchParams }: PropsType) {
                   </div>
                 </td>
                 <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                  {document.attachment?.slice(42) ?? "No Attachment"}
+                  {document.attachment?.slice(42) ?? ""}
                 </td>
                 <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
                   {document.Approver}
@@ -165,7 +165,7 @@ export default function ApproveDocumentsList({ searchParams }: PropsType) {
                 <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">
                   <button
                     onClick={() => handleApprove(document.ROWID)}
-                    className={`w-32 rounded-md px-3 py-1 text-sm font-medium uppercase shadow-sm ${document.Status === "Approved" ? "bg-green-500 text-white hover:bg-green-700" : "bg-blue-700 text-white hover:bg-blue-900"}`}
+                    className={`w-32 rounded-md px-3 py-2 text-sm font-medium uppercase shadow-sm ${document.Status === "Approved" ? "bg-green-500 text-white hover:bg-green-700" : "bg-blue-700 text-white hover:bg-blue-900"}`}
                   >
                     {document.Status === "Approved" ? "✅ Approved" : "👁️ Review"}
                   </button>

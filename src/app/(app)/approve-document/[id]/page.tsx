@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useCallback } from "react";
 import { PDFPreview } from "@/components/pdf-preview";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useEffect, useState } from "react";
@@ -19,6 +19,9 @@ export default function ApproveDocument({ searchParams }: PropsType) {
   const [isClient, setIsClient] = useState(false);
   const { nguageStore } = useStore();
   const [paginationData, setPaginationData] = useState<Document[]>([]);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [loadingPdf, setLoadingPdf] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
   const param = useParams();
   const slug = param?.id;
@@ -51,6 +54,63 @@ export default function ApproveDocument({ searchParams }: PropsType) {
   useEffect(() => {
     setIsClient(true);
   }, [slug]);
+
+    // Create a stable callback for fetching PDF
+    const fetchPdf = useCallback(async (doc: Document | null) => {
+      if (!doc?.attachment) {
+        setPdfUrl(null);
+        return;
+      }
+  
+      setLoadingPdf(true);
+      setError(null);
+  
+      try {
+        let token = null;
+        if (typeof window !== "undefined") {
+          token = localStorage.getItem("access_token");
+        }
+  
+        // Create a new URL for the API call
+        const apiUrl = `/api/GetPdfUrl?attachment=${encodeURIComponent(doc.attachment)}`;
+        
+        const pdfResponse = await fetch(apiUrl, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+  
+        if (!pdfResponse.ok) {
+          throw new Error(
+            `Failed to fetch PDF: ${pdfResponse.status} ${pdfResponse.statusText}`,
+          );
+        }
+  
+        // Create a blob from the response
+        const pdfBlob = await pdfResponse.blob();
+  
+        // Create a URL for the blob
+        const blobUrl = URL.createObjectURL(pdfBlob);
+        setPdfUrl(blobUrl);
+      } catch (err) {
+        console.error("Failed to fetch PDF:", err);
+        setError(err instanceof Error ? err.message : "Failed to load PDF");
+        setPdfUrl(null);
+      } finally {
+        setLoadingPdf(false);
+      }
+    }, []);
+  
+    useEffect(() => {
+      // Clean up previous blob URL
+      if (pdfUrl) {
+        URL.revokeObjectURL(pdfUrl);
+        setPdfUrl(null);
+      }
+      
+      // Fetch new PDF
+      fetchPdf(selectedDoc);
+    }, [selectedDoc, fetchPdf]); // Add fetchPdf to dependencies
 
   // Prevent rendering until client-side to avoid hydration mismatch
   if (!isClient) {
@@ -100,9 +160,9 @@ export default function ApproveDocument({ searchParams }: PropsType) {
           fallback={<div className="animate-pulse rounded-lg bg-gray-100" />}
         >
           <PDFPreview
-            pdfUrl={"https://arxiv.org/pdf/2201.00626.pdf"}
-            docName={"Approval Document Preview"}
-          />
+              pdfUrl={pdfUrl}
+              docName={selectedDoc?.Name || "Approval Document Preview"}
+            />
         </Suspense>
       </div>
       <div className="flex-1">

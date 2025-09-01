@@ -1,12 +1,10 @@
 "use client";
 
-import { Suspense } from "react";
-import { PDFPreview } from "@/components/pdf-preview";
-import { useTranslation } from "@/hooks/useTranslation";
-import { useEffect, useState } from "react";
-import { useStore } from "@/store/store-context";
 import { Document } from "@/components/pdf-list";
+import { useStore } from "@/store/store-context";
+import { observer } from "mobx-react-lite";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 type PropsType = {
   searchParams: Promise<{
@@ -27,11 +25,9 @@ const getStatusColor = (status: Document["Status"]) => {
   }
 };
 
-export default function ApproveDocumentsList({ searchParams }: PropsType) {
-  const { t, language } = useTranslation();
+const ApproveDocumentsList = observer(({ searchParams }: PropsType) => {
   const [isClient, setIsClient] = useState(false);
   const { nguageStore } = useStore();
-  const [paginationData, setPaginationData] = useState<Document[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -44,7 +40,7 @@ export default function ApproveDocumentsList({ searchParams }: PropsType) {
       });
 
       if (response && (response as any).data) {
-        setPaginationData(response.data as Document[]);
+        nguageStore.ApprovalData = response.data as Document[];
       }
     };
 
@@ -130,7 +126,7 @@ export default function ApproveDocumentsList({ searchParams }: PropsType) {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 bg-white">
-            {paginationData.map((document) => (
+            {nguageStore.ApprovalData.map((document) => (
               <tr key={document.ROWID} className="hover:bg-gray-50">
                 <td className="whitespace-nowrap px-6 py-4">
                   <div className="flex items-center">
@@ -177,4 +173,6 @@ export default function ApproveDocumentsList({ searchParams }: PropsType) {
       </div>
     </div>
   );
-}
+});
+
+export default ApproveDocumentsList;

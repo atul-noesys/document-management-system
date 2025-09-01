@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { useStore } from "@/store/store-context";
 import { Document } from "@/components/pdf-list";
 import { useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export const runtime = "edge";
 
@@ -15,6 +16,73 @@ type PropsType = {
     selected_pdf?: string;
   }>;
 };
+
+const developmentCreators = ["Akash", "Rakesh", "Kiran H R"];
+
+const ItCreators = [
+  "Neha Gupta",
+  "Vikas Kapoor",
+  "Riya Das",
+  "Manish Pawar",
+  "Sonal Thakur",
+  "Harsha Gill",
+  "Kritika Bansal",
+  "Gaurav Acharya",
+  "Tanvi Shetty",
+  "Rahul Sharma",
+];
+
+const HrCreators = [
+  "Harish Verghese",
+  "Jyoti Sandhu",
+  "Nisha Trivedi",
+  "Pooja Jain",
+  "Priya Mehta",
+  "Radhika Pathak",
+  "Rohit Malhotra",
+  "Shreya Joshi",
+  "Tarun Agarwal",
+  "Varun Ghosh",
+];
+
+const AdminCreators = [
+  "Anita Dixit",
+  "Deepak Rao",
+  "Divya Menon",
+  "Ishita Pandey",
+  "Maya Arora",
+  "Nikhil Bose",
+  "Ramesh Mukherjee",
+  "Sneha Nair",
+  "Swati Naidu",
+  "Vivek Sethi",
+];
+
+const OperationsCreators = [
+  "Aakash Nanda",
+  "Aditya Khanna",
+  "Alok Bhatia",
+  "Ashish Kulkarni",
+  "Kavya Mishra",
+  "Kiran Kumar",
+  "Meera Iyer",
+  "Pallavi Gowda",
+  "Rajesh Yadav",
+  "Sanjay Reddy",
+];
+
+const FinanceCreators = [
+  "Abhishek Saxena",
+  "Amit Chopra",
+  "Anjali Singh",
+  "Arjun Verma",
+  "Chetan Rajput",
+  "Monika Banerjee",
+  "Parth Desai",
+  "Preeti Chaudhary",
+  "Sameer Kohli",
+  "Simran Patel",
+];
 
 export default function ApproveDocument({ searchParams }: PropsType) {
   const { t, language } = useTranslation();
@@ -25,6 +93,7 @@ export default function ApproveDocument({ searchParams }: PropsType) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [loadingPdf, setLoadingPdf] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
   const param = useParams();
   const slug = param?.id;
@@ -156,6 +225,7 @@ export default function ApproveDocument({ searchParams }: PropsType) {
         },
       });
       setIsFormUploading(false);
+        router.push("/approve-document");
     }
 
     console.log("Form submitted!", selectedDoc);
@@ -272,11 +342,24 @@ export default function ApproveDocument({ searchParams }: PropsType) {
                       }}
                     >
                       <option value="">{t("select_creator")}</option>
-                      <option value="Kiran H R">Kiran H R</option>
-                      <option value="Sneha Nair">Sneha Nair</option>
-                      <option value="Kiran Kumar">Kiran Kumar</option>
-                      <option value="Neha Gupta">Neha Gupta</option>
-                      <option value="Anjali Singh">Anjali Singh</option>
+                      {(selectedDoc?.Department === "Development"
+                        ? developmentCreators
+                        : selectedDoc?.Department === "Finance"
+                          ? FinanceCreators
+                          : selectedDoc?.Department === "IT"
+                            ? ItCreators
+                            : selectedDoc?.Department === "HR"
+                              ? HrCreators
+                              : selectedDoc?.Department === "Admin"
+                                ? AdminCreators
+                                : selectedDoc?.Department === "Operations"
+                                  ? OperationsCreators
+                                  : []
+                      ).map((creator, index) => (
+                        <option key={index} value={creator}>
+                          {creator}
+                        </option>
+                      ))}
                     </select>
                   </div>
 

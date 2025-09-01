@@ -3,6 +3,7 @@ import { makeAutoObservable } from "mobx";
 import { authConfig } from "./axios";
 import Uppy from "@uppy/core";
 import Tus from "@uppy/tus";
+import { Document } from "@/components/pdf-list";
 
 export type PaginationData = {
   DeletedColumns: string[];
@@ -21,6 +22,8 @@ export type RowData = Record<string, string | number | null>;
 
 export class NguageStore {
   count = 0;
+  approvalData: Document[] = [];
+  searchText: string = "";
 
   constructor() {
     makeAutoObservable(this);
@@ -57,6 +60,30 @@ export class NguageStore {
     } catch {
       return null;
     }
+  }
+
+  get SearchText() {
+    return this.searchText;
+  }
+
+  set SearchText(text: string) {
+    this.searchText = text;
+  }
+
+  get ApprovalData() {
+    if (!this.searchText.trim()) {
+      return this.approvalData; // Return all data if search is empty
+    }
+
+    const searchTerm = this.searchText.toLowerCase().trim();
+
+    return this.approvalData.filter((document) =>
+      document.Name.toLowerCase().includes(searchTerm),
+    );
+  }
+
+  set ApprovalData(data: Document[]) {
+    this.approvalData = data;
   }
 
   async UpdateRowData(editRowData: {

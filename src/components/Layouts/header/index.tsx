@@ -9,9 +9,13 @@ import { Notification } from "./notification";
 import { UserInfo } from "./user-info";
 import LanguageToggle from "@/components/LanguageToggle";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useState } from "react";
+import { useStore } from "@/store/store-context";
+import { observer } from "mobx-react-lite";
 
-export function Header() {
+export const Header = observer(() => {
   const { toggleSidebar, isMobile } = useSidebarContext();
+  const { nguageStore } = useStore();
   const { t } = useTranslation();
 
   return (
@@ -38,17 +42,19 @@ export function Header() {
 
       <div className="flex w-full items-center justify-between gap-2 min-[375px]:gap-4">
         <div className="flex items-center gap-3.5">
-          <div className="shrink-0 min-w-[210px]">
+          <div className="min-w-[210px] shrink-0">
             <UserInfo />
           </div>
-          <Notification />
+          {/* <Notification /> */}
           <LanguageToggle />
         </div>
 
         <div className="relative w-full max-w-[300px] xl:max-w-[400px]">
           <input
-            type="search"
-          placeholder={t("search_documents")}
+            type="text"
+            value={nguageStore.SearchText} 
+            onChange={(e) => (nguageStore.SearchText = e.target.value)} 
+            placeholder={t("search_documents")}
             className="flex w-full items-center gap-3.5 rounded-full border bg-gray-2 py-3 pl-[53px] pr-5 outline-none transition-colors focus-visible:border-primary dark:border-dark-3 dark:bg-dark-2 dark:hover:border-dark-4 dark:hover:bg-dark-3 dark:hover:text-dark-6 dark:focus-visible:border-primary"
           />
           <SearchIcon className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 max-[1015px]:size-5" />
@@ -56,4 +62,4 @@ export function Header() {
       </div>
     </header>
   );
-}
+});

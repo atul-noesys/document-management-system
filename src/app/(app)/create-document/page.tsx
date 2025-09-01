@@ -135,6 +135,20 @@ export default function CreateDocument() {
     setIsFormUploading(true);
     await nguageStore.AddDataSourceRow(formData);
     setIsFormUploading(false);
+    setFormData({
+      Name: "",
+      Memo: "",
+      "Document Type": "",
+      attachment: "",
+      Creater: "",
+      Approver: "",
+      Status: "Pending",
+      created_on: new Date().toISOString().split("T")[0],
+      "Due Date": new Date().toISOString().split("T")[0],
+      unique_id: uuidv4(),
+      Department: "",
+      Priority: "",
+    });
     console.log("Form submitted!", formData);
   };
 

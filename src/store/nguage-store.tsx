@@ -85,30 +85,35 @@ export class NguageStore {
 
   async UploadAttachFile(file: File, fileName: string) {
     try {
-    const formData = new FormData();
-    formData.append("file", file);
-    const data = new Uppy({
-      id: "upload",
-      autoProceed: true,
-      meta: {
-        ContentType: file.type,
-        Headers: {},
-        Length: file.size,
-        Name: fileName,
-        FileName: fileName,
-        tenant: "docms",
-      },
-    }).use(Tus, { endpoint: "https://infoveave.app/ngaugeFileUpload/", chunkSize: 1024 * 1024 * 5, removeFingerprintOnSuccess: true });
-    data.addFile({
-      name: fileName,
-      type: file.type,
-      data: file,
-      source: "Local",
-      isRemote: false,
-    });
+      const formData = new FormData();
+      formData.append("file", file);
+      const data = new Uppy({
+        id: "upload",
+        autoProceed: true,
+        meta: {
+          ContentType: file.type,
+          Headers: {},
+          Length: file.size,
+          Name: fileName,
+          FileName: fileName,
+          tenant: "docms",
+        },
+      }).use(Tus, {
+        endpoint: "https://infoveave.app/ngaugeFileUpload/",
+        chunkSize: 1024 * 1024 * 5,
+        removeFingerprintOnSuccess: true,
+      });
+      data.addFile({
+        name: fileName,
+        type: file.type,
+        data: file,
+        source: "Local",
+        isRemote: false,
+      });
+      return true;
     } catch (error) {
       console.error("Upload error:", error);
-      return null;
+      return false;
     }
   }
 
@@ -122,16 +127,23 @@ export class NguageStore {
         token = localStorage.getItem("access_token");
       }
 
-      const { data }: AxiosResponse<string> =  await axios.post("/api/AddRow", rowData, {
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
+      const { data }: AxiosResponse<string> = await axios.post(
+        "/api/AddRow",
+        rowData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
         },
-      });
+      );
 
       return { result: data, error: "" };
     } catch (e) {
-      return { result: null, error: (e as {data : {ref : string}}).data.ref ?? "" };
+      return {
+        result: null,
+        error: (e as { data: { ref: string } }).data.ref ?? "",
+      };
     }
   }
 }

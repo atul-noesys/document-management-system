@@ -76,6 +76,7 @@ export default function CreateDocument() {
   const { t, language } = useTranslation();
   const [isClient, setIsClient] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isFormUploading, setIsFormUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [fileName, setFileName] = useState("");
   const { nguageStore } = useStore();
@@ -110,7 +111,7 @@ export default function CreateDocument() {
       );
 
       if (response) {
-        setFormData({ ...formData, attachment: file.name });
+        setFormData({ ...formData, attachment: fileNameToUpload });
         setFileName(fileNameToUpload);
       }
     } catch (error) {
@@ -131,7 +132,9 @@ export default function CreateDocument() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsFormUploading(true);
     await nguageStore.AddDataSourceRow(formData);
+    setIsFormUploading(false);
     console.log("Form submitted!", formData);
   };
 
@@ -480,10 +483,19 @@ export default function CreateDocument() {
                               {uploadError}
                             </p>
                           )}
-                          <span className="font-semibold">
-                            {t("click_to_upload")}
-                          </span>{" "}
-                          {t("or_drag_and_drop")}
+                          {formData.attachment !== "" ? (
+                            <span className="font-semibold">
+                              {formData.attachment.slice(42)}
+                            </span>
+                          ) : (
+                            <>
+                              {" "}
+                              <span className="font-semibold">
+                                {t("click_to_upload")}
+                              </span>{" "}
+                              {t("or_drag_and_drop")}
+                            </>
+                          )}
                         </p>
                       </div>
                     )}
@@ -565,8 +577,13 @@ export default function CreateDocument() {
             <div className="flex justify-end">
               <button
                 type="submit"
-                className="rounded-lg bg-blue-600 px-4 py-3 font-medium text-white transition-colors hover:bg-blue-700"
+                className="flex gap-2 rounded-lg bg-blue-600 px-4 py-3 font-medium text-white transition-colors hover:bg-blue-700"
               >
+                {isFormUploading && (
+                  <>
+                    <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
+                  </>
+                )}
                 {t("add_document")}
               </button>
             </div>

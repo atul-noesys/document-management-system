@@ -21,6 +21,7 @@ export default function ApproveDocument({ searchParams }: PropsType) {
   const [isClient, setIsClient] = useState(false);
   const { nguageStore } = useStore();
   const [paginationData, setPaginationData] = useState<Document[]>([]);
+  const [isFormUploading, setIsFormUploading] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [loadingPdf, setLoadingPdf] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,62 +58,62 @@ export default function ApproveDocument({ searchParams }: PropsType) {
     setIsClient(true);
   }, [slug]);
 
-    // Create a stable callback for fetching PDF
-    const fetchPdf = useCallback(async (doc: Document | null) => {
-      if (!doc?.attachment) {
-        setPdfUrl(null);
-        return;
+  // Create a stable callback for fetching PDF
+  const fetchPdf = useCallback(async (doc: Document | null) => {
+    if (!doc?.attachment) {
+      setPdfUrl(null);
+      return;
+    }
+
+    setLoadingPdf(true);
+    setError(null);
+
+    try {
+      let token = null;
+      if (typeof window !== "undefined") {
+        token = localStorage.getItem("access_token");
       }
-  
-      setLoadingPdf(true);
-      setError(null);
-  
-      try {
-        let token = null;
-        if (typeof window !== "undefined") {
-          token = localStorage.getItem("access_token");
-        }
-  
-        // Create a new URL for the API call
-        const apiUrl = `/api/GetPdfUrl?attachment=${encodeURIComponent(doc.attachment)}`;
-        
-        const pdfResponse = await fetch(apiUrl, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-  
-        if (!pdfResponse.ok) {
-          throw new Error(
-            `Failed to fetch PDF: ${pdfResponse.status} ${pdfResponse.statusText}`,
-          );
-        }
-  
-        // Create a blob from the response
-        const pdfBlob = await pdfResponse.blob();
-  
-        // Create a URL for the blob
-        const blobUrl = URL.createObjectURL(pdfBlob);
-        setPdfUrl(blobUrl);
-      } catch (err) {
-        console.error("Failed to fetch PDF:", err);
-        setError(err instanceof Error ? err.message : "Failed to load PDF");
-        setPdfUrl(null);
-      } finally {
-        setLoadingPdf(false);
+
+      // Create a new URL for the API call
+      const apiUrl = `/api/GetPdfUrl?attachment=${encodeURIComponent(doc.attachment)}`;
+
+      const pdfResponse = await fetch(apiUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!pdfResponse.ok) {
+        throw new Error(
+          `Failed to fetch PDF: ${pdfResponse.status} ${pdfResponse.statusText}`,
+        );
       }
-    }, []);
-  
-    useEffect(() => {
-      // Clean up previous blob URL
-      if (pdfUrl) {
-        URL.revokeObjectURL(pdfUrl);
-        setPdfUrl(null);
-      }
-      
-      // Fetch new PDF
-      fetchPdf(selectedDoc);
-    }, [selectedDoc, fetchPdf]); // Add fetchPdf to dependencies
+
+      // Create a blob from the response
+      const pdfBlob = await pdfResponse.blob();
+
+      // Create a URL for the blob
+      const blobUrl = URL.createObjectURL(pdfBlob);
+      setPdfUrl(blobUrl);
+    } catch (err) {
+      console.error("Failed to fetch PDF:", err);
+      setError(err instanceof Error ? err.message : "Failed to load PDF");
+      setPdfUrl(null);
+    } finally {
+      setLoadingPdf(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Clean up previous blob URL
+    if (pdfUrl) {
+      URL.revokeObjectURL(pdfUrl);
+      setPdfUrl(null);
+    }
+
+    // Fetch new PDF
+    fetchPdf(selectedDoc);
+  }, [selectedDoc, fetchPdf]); // Add fetchPdf to dependencies
 
   // Prevent rendering until client-side to avoid hydration mismatch
   if (!isClient) {
@@ -144,12 +145,17 @@ export default function ApproveDocument({ searchParams }: PropsType) {
 
   const handleSubmit = async (e: HandleSubmitEvent) => {
     e.preventDefault();
+    setIsFormUploading(true);
 
-    if(selectedDoc){
+    if (selectedDoc) {
       await nguageStore.UpdateRowData({
         rowData: selectedDoc ?? {},
-        primaryKeyData: { primaryKey: "ROWID", value: selectedDoc.ROWID.toString() },
+        primaryKeyData: {
+          primaryKey: "ROWID",
+          value: selectedDoc.ROWID.toString(),
+        },
       });
+      setIsFormUploading(false);
     }
 
     console.log("Form submitted!", selectedDoc);
@@ -162,9 +168,9 @@ export default function ApproveDocument({ searchParams }: PropsType) {
           fallback={<div className="animate-pulse rounded-lg bg-gray-100" />}
         >
           <PDFPreview
-              pdfUrl={pdfUrl}
-              docName={selectedDoc?.Name || "Approval Document Preview"}
-            />
+            pdfUrl={pdfUrl}
+            docName={selectedDoc?.Name || "Approval Document Preview"}
+          />
         </Suspense>
       </div>
       <div className="flex-1">
@@ -460,8 +466,13 @@ export default function ApproveDocument({ searchParams }: PropsType) {
                 <div className="flex justify-end">
                   <button
                     type="submit"
-                    className="rounded-lg bg-blue-600 px-4 py-3 font-medium text-white transition-colors hover:bg-blue-700"
+                    className="flex gap-2 rounded-lg bg-blue-600 px-4 py-3 font-medium text-white transition-colors hover:bg-blue-700"
                   >
+                    {isFormUploading && (
+                      <>
+                        <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
+                      </>
+                    )}
                     {t("approve")}
                   </button>
                 </div>
